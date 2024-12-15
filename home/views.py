@@ -13,7 +13,7 @@ from django.core.paginator import Paginator
 class PublicBlog(APIView):
     def get(self, request):
         try:
-            blogs = Blog.objects.all()
+            blogs = Blog.objects.all().order_by('?')
 
             # search functionality
             if request.GET.get('search'):
@@ -21,7 +21,7 @@ class PublicBlog(APIView):
                 blogs = blogs.filter(Q(title__icontains=search)|Q(blog_text__icontains=search))
 
             page_number = request.GET.get('page', 1)
-            paginator = Paginator(blogs, 1)
+            paginator = Paginator(blogs, 2)
             serializer = BlogSerializer(paginator.page(page_number), many=True)
 
             return Response({
