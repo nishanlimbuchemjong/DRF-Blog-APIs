@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from .models import Blog
+from django.db.models import Q
 
 class BlogView(APIView):
     permission_classes = [IsAuthenticated]
@@ -14,6 +15,11 @@ class BlogView(APIView):
     def get(self, request):
         try:
             blogs = Blog.objects.filter(user=request.user)
+
+            # search functionality
+            if request.GET.get('search'):
+                search = request.GET.get('search')
+                blogs = blogs.filter(Q(title__icontains=search)|Q(blog_text__icontains=search))
             serializer = BlogSerializer(blogs, many=True)
             return Response({
                 'data': serializer.data,
