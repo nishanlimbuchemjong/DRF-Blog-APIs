@@ -1,4 +1,4 @@
-from optree.functools import partial
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import BlogSerializer
@@ -70,7 +70,7 @@ class BlogView(APIView):
                     'data': {},
                     'message': 'invalid blog uid'
                 }, status=status.HTTP_400_BAD_REQUEST)
-            if request.user != blog.user:
+            if request.user != blog[0].user:
                 return Response({
                     'data': {},
                     'message': 'you are not authorized'
@@ -86,6 +86,35 @@ class BlogView(APIView):
             return Response({
                 'data': serializer.data,
                 'message': 'blog updated successfully',
+            }, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            print(e)
+            return Response({
+                'data': {},
+                'message': 'something went wrong'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+    def delete(self, request):
+        try:
+            data = request.data
+            blog = Blog.objects.filter(uid=data.get('uid'))
+            if not blog.exists():
+                return Response({
+                    'data': {},
+                    'message': 'invalid blog uid'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            if request.user != blog[0].user:
+                return Response({
+                    'data': {},
+                    'message': 'you are not authorized'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            blog[0].delete()
+            return Response({
+                'data': {},
+                'message': 'blog deleted successfully',
             }, status=status.HTTP_201_CREATED)
 
         except Exception as e:
