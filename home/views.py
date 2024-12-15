@@ -1,3 +1,4 @@
+from optree.functools import partial
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import BlogSerializer
@@ -60,4 +61,36 @@ class BlogView(APIView):
             }, status=status.HTTP_400_BAD_REQUEST)
 
 
+    def patch(self, request):
+        try:
+            data = request.data
+            blog = Blog.objects.filter(uid=data.get('uid'))
+            if not blog.exists():
+                return Response({
+                    'data': {},
+                    'message': 'invalid blog uid'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            if request.user != blog.user:
+                return Response({
+                    'data': {},
+                    'message': 'you are not authorized'
+                }, status=status.HTTP_400_BAD_REQUEST)
 
+            serializer = BlogSerializer(blog[0], data = data, partial=True)
+            if not serializer.is_valid():
+                return Response({
+                    'data': serializer.errors,
+                    'message': 'something went wrong'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            serializer.save()
+            return Response({
+                'data': serializer.data,
+                'message': 'blog updated successfully',
+            }, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            print(e)
+            return Response({
+                'data': {},
+                'message': 'something went wrong'
+            }, status=status.HTTP_400_BAD_REQUEST)
